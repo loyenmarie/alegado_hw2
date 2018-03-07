@@ -1,0 +1,124 @@
+CREATE OR REPLACE FUNCTION login(IN par_username TEXT, IN par_password TEXT)
+  RETURNS TEXT AS
+$$
+DECLARE
+  loc_username TEXT;
+  loc_password TEXT;
+  loc_res      TEXT;
+BEGIN
+  SELECT INTO loc_username
+    "username",
+    loc_password "password"
+  FROM account
+  WHERE username = par_username AND password = par_password;
+  IF loc_username ISNULL AND loc_password ISNULL
+  THEN
+    loc_res = 'Error Username or password';
+  ELSE
+    loc_res = 'ok';
+  END IF;
+  RETURN loc_res;
+END;
+
+$$
+LANGUAGE 'plpgsql' VOLATILE;
+
+
+create or REPLACE FUNCTION reserves(IN names text, IN contacts text, IN times text, IN routes text, IN seat_nos TEXT, IN bus_nos text) RETURNS Text AS
+  $$
+  DECLARE
+    loc_res text;
+  BEGIN
+      INSERT INTO reservation
+          (name, contact, tiime, route, seat_no, bus_no)
+      VALUES (names,contacts,times,routes,seat_nos,bus_nos);
+    loc_res = 'stored';
+    return loc_res;
+  END;
+  $$
+  LANGUAGE 'plpgsql' VOLATILE;
+
+
+create or replace function viewres(OUT text, OUT text, OUT text, OUT text, OUT TEXT, OUT TEXT, OUT TEXT) returns setof record as
+$$
+  select a.name, a.contact, a.tiime, a.route, a.seat_no, a.bus_no, b.price_rate from reservation a, price b ;
+$$
+ language 'sql';
+
+
+create or replace function delete2(in par_del text) returns text as
+$$
+  declare
+    loc_res text;
+
+  begin
+     if par_del NOTNULL then
+        delete from reservation;
+         loc_res = 'ok';
+      else
+       loc_res = 'Error';
+     end if;
+     return loc_res;
+  end;
+$$
+ language 'plpgsql';
+
+alter sequence reservation_reserve_id_seq restart with 1;
+
+create or replace function edit_reserve(IN names text, IN contacts text, IN times text, IN routes text, IN seat_nos TEXT, IN bus_nos text) returns text as
+$$
+  declare
+    loc_res text;
+
+    loc_names text;
+    loc_contacts text;
+    loc_times text;
+    loc_routes text;
+    loc_seat_nos text;
+    loc_bus_no text;
+    r int;
+
+  begin
+     select into loc_names name, loc_contacts contact , loc_times tiime, loc_routes route, loc_seat_nos seat_no, loc_bus_no bus_no, r reserve_id from reservation where reserve_id = r;
+    if loc_names NOTNULL then
+
+
+      UPDATE reservation set name = names,  contact = contacts, tiime = times, route = routes, seat_no = seat_nos, bus_no = bus_nos where reserve_id = r;
+       loc_res = 'ok';
+
+
+     else
+       loc_res = 'Error';
+     end if;
+     return loc_res;
+  end;
+$$
+ language 'plpgsql';
+
+
+create or replace function editedit(IN names text, IN contacts text, IN times text, IN routes text, IN seat_nos TEXT, IN bus_nos text) returns text as
+$$
+  declare
+    loc_res text;
+
+    loc_names text;
+    loc_contacts text;
+    loc_times text;
+    loc_routes text;
+    loc_seat_nos text;
+    loc_bus_no text;
+
+  begin
+     select into loc_names name, loc_contacts contact , loc_times tiime, loc_routes route, loc_seat_nos seat_no, loc_bus_no bus_no from reservation;
+    if loc_names NOTNULL then
+
+      UPDATE reservation set name = names,  contact = contacts, tiime = times, route = routes, seat_no = seat_nos, bus_no = bus_nos where reserve_id = 1;
+       loc_res = 'ok';
+
+     else
+       loc_res = 'Error';
+     end if;
+     return loc_res;
+  end;
+$$
+ language 'plpgsql';
